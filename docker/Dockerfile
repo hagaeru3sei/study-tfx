@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 RUN apt-get update
 RUN apt-get install -y python3-pip python3-dev build-essential
-RUN apt-get install -y iproute2
+RUN apt-get install -y iproute2 iputils-ping net-tools
 
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --upgrade setuptools
@@ -15,6 +15,8 @@ RUN python3 -m pip install cryptography
 RUN mkdir -p ~/airflow/dags
 RUN mkdir -p ~/tfx/pipelines
 
+COPY ./docker/airflow.cfg /root/airflow/
+COPY ./cifar10/cifar10_pipeline_beam.py /root/airflow/dags/
+
 RUN airflow initdb
 
-COPY ./cifar10/cifar10_pipeline_beam.py /root/airflow/dags/

@@ -7,7 +7,8 @@ x-tfx-service: &tfx-service
     AIRFLOW_HOME: ~/airflow
     TFX_DIR: ~/tfx
     CIFAR10_DIR: ~/cifar10
-  volumes: 
+  volumes:
+    - ./dags:/root/airflow/dags
     - ./cifar10:/root/cifar10
   restart: always
 services:
@@ -15,16 +16,13 @@ services:
     <<: *tfx-service
     ports:
       - "8080:8080"
-    #environment:
-    #  AIRFLOW_HOME: ~/airflow
-    #  TFX_DIR: ~/tfx
-    #  CIFAR10_DIR: ~/cifar10
-    #volumes: 
-    #  - ./cifar10:/root/cifar10
     command: ["airflow", "webserver"]
   scheduler:
     <<: *tfx-service
+    depends_on:
+      - server
     command: ["airflow", "scheduler"]
 networks:
   default:
     driver: bridge
+
