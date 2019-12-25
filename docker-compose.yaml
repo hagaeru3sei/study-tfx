@@ -2,11 +2,15 @@ version: "3.7"
 x-tfx-service: &tfx-service
   build:
     context: .
-    dockerfile: ./docker/Dockerfile
+    dockerfile: ./docker/airflow/Dockerfile
   environment:
     AIRFLOW_HOME: ~/airflow
     TFX_DIR: ~/tfx
     CIFAR10_DIR: ~/cifar10
+    MYSQL_DATABASE: airflow
+    MYSQL_USER: airflow
+    MYSQL_PASSWORD: airflow
+    MYSQL_ROOT_PASSWORD: rootpassword
   volumes:
     - ./dags:/root/airflow/dags
     - ./cifar10:/root/cifar10
@@ -16,13 +20,31 @@ services:
     <<: *tfx-service
     ports:
       - "8080:8080"
-    command: ["airflow", "webserver"]
+    depends_on:
+      - mysql
+    command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "/root/airflow/startup.sh"]
   scheduler:
     <<: *tfx-service
     depends_on:
       - server
-    command: ["airflow", "scheduler"]
+      - mysql
+    command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "airflow", "scheduler"]
+  mysql:
+    build:
+      context: .
+      dockerfile: ./docker/mysql/Dockerfile
+    environment:
+      MYSQL_DATABASE: airflow
+      MYSQL_USER: airflow
+      MYSQL_PASSWORD: airflow
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - ./docker/mysql/initdb.d:/docker-entrypoint-initdb.d
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+      - ./logs/mysql:/var/log/mysql
+    ports:
+      - "3306:3306"
+    restart: always
 networks:
   default:
     driver: bridge
-
