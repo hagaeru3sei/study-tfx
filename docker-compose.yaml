@@ -45,6 +45,13 @@ services:
     ports:
       - "3306:3306"
     restart: always
+  redis:
+    build:
+      context: .
+      dockerfile: ./docker/redis/Dockerfile
+    ports:
+      - "6379:6379"
+    restart: always
 networks:
   default:
     driver: bridge
