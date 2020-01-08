@@ -11,6 +11,7 @@ x-tfx-service: &tfx-service
     MYSQL_USER: airflow
     MYSQL_PASSWORD: airflow
     MYSQL_ROOT_PASSWORD: rootpassword
+    EXECUTOR: Celery
   volumes:
     - ./dags:/root/airflow/dags
     - ./cifar10:/root/cifar10
@@ -34,10 +35,15 @@ services:
   worker:
     <<: *tfx-service
     depends_on:
-      - server
-      - mysql
-      - redis
+      - scheduler
     command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "airflow", "worker"]
+  flower:
+    <<: *tfx-service
+    depends_on:
+      - redis
+    ports:
+      - "5555:5555"
+    command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "airflow", "flower"]
   mysql:
     build:
       context: .
