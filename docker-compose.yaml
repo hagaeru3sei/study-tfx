@@ -22,13 +22,22 @@ services:
       - "8080:8080"
     depends_on:
       - mysql
+      - redis
     command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "/root/airflow/startup.sh"]
   scheduler:
     <<: *tfx-service
     depends_on:
       - server
       - mysql
+      - redis
     command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "airflow", "scheduler"]
+  worker:
+    <<: *tfx-service
+    depends_on:
+      - server
+      - mysql
+      - redis
+    command: ["/tmp/wait-for-mysql.sh", "mysql", "--", "airflow", "worker"]
   mysql:
     build:
       context: .
